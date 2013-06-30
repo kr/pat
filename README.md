@@ -1,8 +1,8 @@
-# pat (formerly pat.go) - A Sinatra style pattern muxer for Go's net/http library
+# pat - A Sinatra style pattern muxer for Go's net/http library
 
 ## INSTALL
 
-	$ go get github.com/bmizerany/pat
+	$ go get github.com/cyberdelia/pat
 
 ## USE
 
@@ -38,7 +38,7 @@ func main() {
 It's that simple.
 
 For more information, see:
-http://gopkgdoc.appspot.com/pkg/github.com/bmizerany/pat
+http://godoc.org/github.com/cyberdelia/pat
 
 ## CONTRIBUTORS
 
