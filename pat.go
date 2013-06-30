@@ -57,23 +57,23 @@ import (
 // A trivial example server is:
 //
 //	package main
-//	
+//
 //	import (
 //		"io"
 //		"net/http"
 //		"github.com/bmizerany/pat"
 //		"log"
 //	)
-//	
+//
 //	// hello world, the web server
 //	func HelloServer(w http.ResponseWriter, req *http.Request) {
 //		io.WriteString(w, "hello, "+req.URL.Query().Get(":name")+"!\n")
 //	}
-//	
+//
 //	func main() {
 //		m := pat.New()
 //		m.Get("/hello/:name", http.HandlerFunc(HelloServer))
-//	
+//
 //		// Register this pat with the default serve mux so that other packages
 //		// may also be exported. (i.e. /debug/pprof/*)
 //		http.Handle("/", m)
@@ -166,6 +166,11 @@ func (p *PatternServeMux) Options(pat string, h http.Handler) {
 	p.Add("OPTIONS", pat, h)
 }
 
+// Patch will register a pattern with a handler for PATCH requests.
+func (p *PatternServeMux) Patch(pat string, h http.Handler) {
+	p.Add("PATCH", pat, h)
+}
+
 // Add will register a pattern with a handler for meth requests.
 func (p *PatternServeMux) Add(meth, pat string, h http.Handler) {
 	p.handlers[meth] = append(p.handlers[meth], &patHandler{pat, h})
@@ -190,6 +195,9 @@ func (p *PatternServeMux) DelFunc(pat string, f http.HandlerFunc) { p.Del(pat, f
 
 // OptionsFunc is like Options, but it takes an http.HandlerFunc instead of an http.Handler.
 func (p *PatternServeMux) OptionsFunc(pat string, f http.HandlerFunc) { p.Options(pat, f) }
+
+// PatchFunc is like Patch, but it takes an http.HandlerFunc instead of an http.Handler.
+func (p *PatternServeMux) PatchFunc(pat string, f http.HandlerFunc) { p.Patch(pat, f) }
 
 // Tail returns the trailing string in path after the final slash for a pat ending with a slash.
 //
