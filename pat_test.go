@@ -19,64 +19,64 @@ func TestPatMatch(t *testing.T) {
 
 	params, ok = (&patHandler{"/foo/:name", nil}).try("/foo/bar")
 	assert.Equal(t, true, ok)
-	assert.Equal(t, url.Values{":name": {"bar"}}, params)
+	assert.Equal(t, url.Values{":name": {"bar"}, "::match": {"/foo/bar"}}, params)
 
 	params, ok = (&patHandler{"/foo/:name/baz", nil}).try("/foo/bar")
 	assert.Equal(t, false, ok)
 
 	params, ok = (&patHandler{"/foo/:name/bar/", nil}).try("/foo/keith/bar/baz")
 	assert.Equal(t, true, ok)
-	assert.Equal(t, url.Values{":name": {"keith"}}, params)
+	assert.Equal(t, url.Values{":name": {"keith"}, "::match": {"/foo/keith/bar/"}}, params)
 
 	params, ok = (&patHandler{"/foo/:name/bar/", nil}).try("/foo/keith/bar/")
 	assert.Equal(t, true, ok)
-	assert.Equal(t, url.Values{":name": {"keith"}}, params)
+	assert.Equal(t, url.Values{":name": {"keith"}, "::match": {"/foo/keith/bar/"}}, params)
 
 	params, ok = (&patHandler{"/foo/:name/bar/", nil}).try("/foo/keith/bar")
 	assert.Equal(t, false, ok)
 
 	params, ok = (&patHandler{"/foo/:name/baz", nil}).try("/foo/bar/baz")
 	assert.Equal(t, true, ok)
-	assert.Equal(t, url.Values{":name": {"bar"}}, params)
+	assert.Equal(t, url.Values{":name": {"bar"}, "::match": {"/foo/bar/baz"}}, params)
 
 	params, ok = (&patHandler{"/foo/:name/baz/:id", nil}).try("/foo/bar/baz")
 	assert.Equal(t, false, ok)
 
 	params, ok = (&patHandler{"/foo/:name/baz/:id", nil}).try("/foo/bar/baz/123")
 	assert.Equal(t, true, ok)
-	assert.Equal(t, url.Values{":name": {"bar"}, ":id": {"123"}}, params)
+	assert.Equal(t, url.Values{":name": {"bar"}, ":id": {"123"}, "::match": {"/foo/bar/baz/123"}}, params)
 
 	params, ok = (&patHandler{"/foo/:name/baz/:name", nil}).try("/foo/bar/baz/123")
 	assert.Equal(t, true, ok)
-	assert.Equal(t, url.Values{":name": {"bar", "123"}}, params)
+	assert.Equal(t, url.Values{":name": {"bar", "123"}, "::match": {"/foo/bar/baz/123"}}, params)
 
 	params, ok = (&patHandler{"/foo/:name.txt", nil}).try("/foo/bar.txt")
 	assert.Equal(t, true, ok)
-	assert.Equal(t, url.Values{":name": {"bar"}}, params)
+	assert.Equal(t, url.Values{":name": {"bar"}, "::match": {"/foo/bar.txt"}}, params)
 
 	params, ok = (&patHandler{"/foo/:name", nil}).try("/foo/:bar")
 	assert.Equal(t, true, ok)
-	assert.Equal(t, url.Values{":name": {":bar"}}, params)
+	assert.Equal(t, url.Values{":name": {":bar"}, "::match": {"/foo/:bar"}}, params)
 
 	params, ok = (&patHandler{"/foo/:a:b", nil}).try("/foo/val1:val2")
 	assert.Equal(t, true, ok)
-	assert.Equal(t, url.Values{":a": {"val1"}, ":b": {":val2"}}, params)
+	assert.Equal(t, url.Values{":a": {"val1"}, ":b": {":val2"}, "::match": {"/foo/val1:val2"}}, params)
 
 	params, ok = (&patHandler{"/foo/:a.", nil}).try("/foo/.")
 	assert.Equal(t, true, ok)
-	assert.Equal(t, url.Values{":a": {""}}, params)
+	assert.Equal(t, url.Values{":a": {""}, "::match": {"/foo/."}}, params)
 
 	params, ok = (&patHandler{"/foo/:a:b", nil}).try("/foo/:bar")
 	assert.Equal(t, true, ok)
-	assert.Equal(t, url.Values{":a": {""}, ":b": {":bar"}}, params)
+	assert.Equal(t, url.Values{":a": {""}, ":b": {":bar"}, "::match": {"/foo/:bar"}}, params)
 
 	params, ok = (&patHandler{"/foo/:a:b:c", nil}).try("/foo/:bar")
 	assert.Equal(t, true, ok)
-	assert.Equal(t, url.Values{":a": {""}, ":b": {""}, ":c": {":bar"}}, params)
+	assert.Equal(t, url.Values{":a": {""}, ":b": {""}, ":c": {":bar"}, "::match": {"/foo/:bar"}}, params)
 
 	params, ok = (&patHandler{"/foo/::name", nil}).try("/foo/val1:val2")
 	assert.Equal(t, true, ok)
-	assert.Equal(t, url.Values{":": {"val1"}, ":name": {":val2"}}, params)
+	assert.Equal(t, url.Values{":": {"val1"}, ":name": {":val2"}, "::match": {"/foo/val1:val2"}}, params)
 
 	params, ok = (&patHandler{"/foo/:name.txt", nil}).try("/foo/bar/baz.txt")
 	assert.Equal(t, false, ok)
@@ -86,7 +86,7 @@ func TestPatMatch(t *testing.T) {
 
 	params, ok = (&patHandler{"/foo/x:name", nil}).try("/foo/xbar")
 	assert.Equal(t, true, ok)
-	assert.Equal(t, url.Values{":name": {"bar"}}, params)
+	assert.Equal(t, url.Values{":name": {"bar"}, "::match": {"/foo/xbar"}}, params)
 }
 
 func TestPatRoutingHit(t *testing.T) {
@@ -145,7 +145,7 @@ func TestPatNoParams(t *testing.T) {
 	p.Get("/foo/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ok = true
 		t.Logf("%#v", r.URL.RawQuery)
-		assert.Equal(t, "", r.URL.RawQuery)
+		assert.Equal(t, "%3A%3Amatch=%2Ffoo%2F&", r.URL.RawQuery)
 	}))
 
 	r, err := http.NewRequest("GET", "/foo/", nil)
@@ -166,7 +166,7 @@ func TestPatOnlyUserParams(t *testing.T) {
 	p.Get("/foo/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ok = true
 		t.Logf("%#v", r.URL.RawQuery)
-		assert.Equal(t, "a=b", r.URL.RawQuery)
+		assert.Equal(t, "%3A%3Amatch=%2Ffoo%2F&a=b", r.URL.RawQuery)
 	}))
 
 	r, err := http.NewRequest("GET", "/foo/?a=b", nil)
@@ -237,6 +237,20 @@ func TestTail(t *testing.T) {
 	if g := Tail("/b/:a", "/x/y/z"); g != "" {
 		t.Fatalf("want: %q, got %q", "", g)
 	}
+}
+
+func TestStripPrefix(t *testing.T) {
+	p := New()
+	p.Get("/foo/:name/", StripPrefix(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/baz" {
+			t.Errorf("Path = %s want /baz", r.URL.Path)
+		}
+	})))
+	r, err := http.NewRequest("GET", "/foo/bar/baz", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p.ServeHTTP(nil, r)
 }
 
 func BenchmarkPatternMatching(b *testing.B) {

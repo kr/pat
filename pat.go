@@ -229,6 +229,16 @@ func Tail(pat, path string) string {
 	return ""
 }
 
+// StripPrefix returns a handler for use in a PatternServeMux.
+// It serves HTTP requests by removing the matched prefix from
+// the request URL's Path and invoking the handler h.
+func StripPrefix(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		prefix := strings.TrimRight(r.URL.Query().Get("::match"), "/")
+		http.StripPrefix(prefix, h).ServeHTTP(w, r)
+	})
+}
+
 type patHandler struct {
 	pat string
 	http.Handler
@@ -241,6 +251,7 @@ func (ph *patHandler) try(path string) (url.Values, bool) {
 		switch {
 		case j >= len(ph.pat):
 			if ph.pat != "/" && len(ph.pat) > 0 && ph.pat[len(ph.pat)-1] == '/' {
+				p.Add("::match", path[:i])
 				return p, true
 			}
 			return nil, false
@@ -260,6 +271,7 @@ func (ph *patHandler) try(path string) (url.Values, bool) {
 	if j != len(ph.pat) {
 		return nil, false
 	}
+	p.Add("::match", path[:i])
 	return p, true
 }
 
